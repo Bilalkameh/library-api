@@ -1,0 +1,5 @@
+Excerpt from my mvn test terminal output on 10 November 2026.
+
+[INFO] Running com.library.api.LibraryApiSmokeTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
