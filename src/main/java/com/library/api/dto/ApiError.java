@@ -1,6 +1,7 @@
 package com.library.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.time.Instant;
@@ -11,12 +12,9 @@ import org.springframework.http.ProblemDetail;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Consistent error envelope retaining the standard ProblemDetail fields.")
 public class ApiError extends ProblemDetail {
-    private final Instant timestamp;
-    private Map<String, String> errors;
-
     public ApiError(HttpStatusCode status, String message, Instant timestamp) {
         super(ProblemDetail.forStatusAndDetail(status, message));
-        this.timestamp = timestamp;
+        super.setProperty("timestamp", timestamp);
     }
 
     @Schema(description = "Public error message, identical to detail", example = "Book with id 99 was not found")
@@ -26,17 +24,18 @@ public class ApiError extends ProblemDetail {
 
     @Schema(description = "UTC instant when the error response was created", example = "2026-11-11T18:30:00Z")
     public Instant getTimestamp() {
-        return timestamp;
+        return (Instant) extension("timestamp");
     }
 
     @Schema(description = "Validation messages keyed by request field; present for field validation errors",
             example = "{\"bookId\":\"must be greater than 0\"}")
+    @SuppressWarnings("unchecked")
     public Map<String, String> getErrors() {
-        return errors;
+        return (Map<String, String>) extension("errors");
     }
 
     public void setErrors(Map<String, String> errors) {
-        this.errors = Map.copyOf(errors);
+        super.setProperty("errors", Map.copyOf(errors));
     }
 
     @Override
@@ -71,7 +70,15 @@ public class ApiError extends ProblemDetail {
 
     @Override
     @Schema(hidden = true)
+    @JsonIgnoreProperties({"timestamp", "errors"})
     public Map<String, Object> getProperties() {
         return super.getProperties();
+    }
+
+    // These reserved extension keys hold Instant and Map<String, String> values.
+    // Keeping one copy in ProblemDetail preserves its symmetric equals/hashCode contract.
+    private Object extension(String name) {
+        Map<String, Object> properties = super.getProperties();
+        return properties == null ? null : properties.get(name);
     }
 }
