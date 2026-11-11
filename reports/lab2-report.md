@@ -4,15 +4,15 @@
 
 The sprint implements all four borrowing stories. The original estimates from the test-first checkpoint are retained below; they cover story implementation and testing, excluding environment setup, report preparation, and the final review.
 
-| Story | Initial estimate (h) | Result |
-| --- | ---: | --- |
-| US-01 - Record a borrowing | 0.75 | DONE: saved borrowing, unavailable book, current local date, 14-day due date, and validated API request. |
-| US-02 - Record a return | 0.50 | DONE: saved return date and fine, restored availability, and duplicate-return protection. |
-| US-03 - List active borrowings | 0.50 | DONE: only the requested member's unreturned records, ordered by ID. |
-| US-04 - Calculate an overdue fine | 0.25 | DONE: exact decimal amounts, EUR 0.50 per overdue day, with a zero minimum. |
-| **Total** | **2.00** | **Four completed stories** |
+| Story | Initial estimate (h) | Actual (h) | Actual / estimate | Result |
+| --- | ---: | ---: | ---: | --- |
+| US-01 - Record a borrowing | 0.75 | 1.00 | 1.3333 | DONE: saved borrowing, unavailable book, current local date, 14-day due date, and validated API request. |
+| US-02 - Record a return | 0.50 | 0.75 | 1.5000 | DONE: saved return date and fine, restored availability, and duplicate-return protection. |
+| US-03 - List active borrowings | 0.50 | 0.50 | 1.0000 | DONE: only the requested member's unreturned records, ordered by ID. |
+| US-04 - Calculate an overdue fine | 0.25 | 0.25 | 1.0000 | DONE: exact decimal amounts, EUR 0.50 per overdue day, with a zero minimum. |
+| **Total** | **2.00** | **2.50** | **1.2500** | **Four completed stories** |
 
-Actual engineering effort was not measured by these execution checks, so no actual/estimated ratio is reported. The assignment's ratio is actual implementation-and-testing hours divided by 2.00; command runtimes are not a substitute for that numerator. Consequently, the available results do not establish whether the ratio is above or below 1.0. The completed-story count is four; it is distinct from the assignment's effort ratio and is not a story-point velocity measurement.
+Actual hours are reported active human effort, recorded retrospectively at completion, with unattended execution time excluded. Story implementation and testing total **2.50 hours** against the original **2.00-hour** estimate, so the assignment's actual/estimated ratio is **1.25**: reported effort exceeded the estimate by 25%. The reciprocal estimate-to-actual multiplier is **0.80**, which describes this comparison rather than an independently measured AI speedup. A separate **0.25 hour** for setup, review, and reporting gives **2.75 hours** for the whole lab; that overhead is outside both story totals. The completed-story count is four and remains distinct from either effort ratio or story-point velocity.
 
 The detailed acceptance criteria and completion status are in [the sprint backlog](../docs/sprint-backlog.md).
 
@@ -132,7 +132,7 @@ The concurrency evidence covers the tested H2 configuration and controlled inter
 
 ## AI assistance and the next sprint
 
-Without measured actual effort, the results do not support a numerical claim that AI assistance made this sprint faster or slower. The concrete outcome is a working four-story feature with repeatable tests, including a defect discovered and corrected during review. Successful code generation alone would not have detected the fractional-ID behavior or established the concurrency claims; focused tests and review were still necessary.
+The reported retrospective effort supports the estimate comparison above. Without an equivalent unassisted baseline, it does not establish that AI assistance made this sprint faster or slower. The concrete outcome is a working four-story feature with repeatable tests, including a defect discovered and corrected during review. Successful code generation alone would not have detected the fractional-ID behavior or established the concurrency claims; focused tests and review were still necessary.
 
 For Sprint 2, the expected improvement is lower environment and framework setup overhead because the build, persistence configuration, fixtures, and error-handling conventions already exist. Reservation requirements and acceptance criteria introduce separate specification work, so lower setup overhead does not guarantee a lower total effort ratio. That is a qualitative prediction rather than a measured productivity result.
 

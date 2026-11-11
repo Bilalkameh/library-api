@@ -4,19 +4,21 @@
 - Starting milestone: `lab-1`, commit `1935e14747819734c2b81098971e8e45c81a1acc`.
 - Scope: borrowing, returns, active-borrowing queries, and overdue fines.
 
-## Initial estimates
+## Estimates and results
 
 Estimates cover implementation and testing for each story. Environment setup, report preparation, and the final review are outside this total. The original estimates are retained for comparison with the completed sprint.
 
 All four stories passed verification on 11 November 2026.
 
-| ID | User story | Estimate (h) | Order | Status |
-| --- | --- | ---: | ---: | --- |
-| US-01 | As a librarian, I can record a borrowing so that the system tracks which member has which book. | 0.75 | 1 | DONE |
-| US-02 | As a librarian, I can record a book return so that the book becomes available again. | 0.50 | 3 | DONE |
-| US-03 | As a member, I can see my active borrowings so that I know which books I currently have. | 0.50 | 4 | DONE |
-| US-04 | As a librarian, I can calculate the fine for an overdue book so that I can charge the right amount, at EUR 0.50 per overdue day. | 0.25 | 2 | DONE |
-| **Total** | | **2.00** | | |
+| ID | User story | Initial estimate (h) | Actual (h) | Actual / estimate | Order | Status |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| US-01 | As a librarian, I can record a borrowing so that the system tracks which member has which book. | 0.75 | 1.00 | 1.3333 | 1 | DONE |
+| US-02 | As a librarian, I can record a book return so that the book becomes available again. | 0.50 | 0.75 | 1.5000 | 3 | DONE |
+| US-03 | As a member, I can see my active borrowings so that I know which books I currently have. | 0.50 | 0.50 | 1.0000 | 4 | DONE |
+| US-04 | As a librarian, I can calculate the fine for an overdue book so that I can charge the right amount, at EUR 0.50 per overdue day. | 0.25 | 0.25 | 1.0000 | 2 | DONE |
+| **Total** | | **2.00** | **2.50** | **1.2500** | | |
+
+Actual hours are reported active human effort, recorded retrospectively at completion. The four stories total 2.50 hours; a separate 0.25 hour for setup, review, and reporting gives 2.75 hours for the whole lab. The story ratio is 2.50 / 2.00 = 1.25. These scopes are kept separate, and unattended execution time is excluded.
 
 US-01 establishes borrowing records and book availability. US-04 follows because returns depend on fine calculation. US-02 completes the borrowing lifecycle, and US-03 queries the resulting active records.
 
