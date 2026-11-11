@@ -3,8 +3,9 @@
 A Spring Boot REST API for books, members, borrowing transactions, and reservations.
 Books can be borrowed for 14 days, returned with an overdue fine of EUR 0.50 per
 day, and queried through each member's active borrowings. Reservations record
-interest in unavailable books and retain cancellation history. Docker and static
-analysis are covered in subsequent labs.
+interest in unavailable books and retain cancellation history. All fourteen API
+operations have OpenAPI documentation, and a multi-stage Docker build packages the
+application with a Java 17 runtime.
 
 ## Requirements and build
 
@@ -87,7 +88,10 @@ Missing records return 404. Validation failures or malformed requests return 400
 validation responses include field errors. Duplicate ISBN/email or foreign-key
 conflicts return 409. Borrowing an unavailable book, repeated returns, and attempts to make a
 book available while it has an active loan also return 409. Error responses use
-Spring ProblemDetail JSON.
+Spring ProblemDetail JSON with a consistent `error` message and UTC `timestamp`.
+The existing `detail` repeats the public message, `status` matches the HTTP status,
+and invalid fields appear in `errors`. Unexpected failures return a generic 500
+message without exposing internal exception details.
 
 ISBN, title, author, genre, name, and email must be nonblank; email must be valid.
 Publication year is a required positive integer. ISBN and member email are unique.
@@ -199,7 +203,54 @@ SELECT COUNT(*) FROM reservations; -- 0
 
 Swagger UI is at `http://localhost:8080/swagger-ui.html` (redirects to the UI).
 Confirm all fourteen operations appear and use "Try it out" to exercise the API.
-The generated OpenAPI document is at `http://localhost:8080/v3/api-docs`.
+The generated OpenAPI document is at `http://localhost:8080/api-docs`.
+The UI groups operations into Books, Members, Borrowings, and Reservations and
+documents request/response fields, examples, validation, and error responses.
+
+## Docker
+
+A running Docker engine with BuildKit support is required. Run the tests before
+building the image; the container build uses the assignment's `-DskipTests` option:
+
+```sh
+mvn clean verify
+docker build --platform linux/amd64 -t library-api:lab4 .
+docker run --rm --platform linux/amd64 --name library-api -p 127.0.0.1:8080:8080 library-api:lab4
+```
+
+The required `eclipse-temurin:17-jre-alpine` image was published for `amd64` at
+verification time, as listed in the [official image manifest](https://github.com/docker-library/official-images/blob/master/library/eclipse-temurin).
+The explicit platform also supports building and running this image on Apple
+Silicon with Docker's emulation enabled. The Maven stage runs on the builder's
+native platform and produces the portable Java 17 JAR.
+
+From another terminal, check the container and stop it when finished:
+
+```sh
+curl http://localhost:8080/books
+curl http://localhost:8080/api-docs
+docker stop library-api
+```
+
+Swagger UI remains at `http://localhost:8080/swagger-ui.html`. The final image runs
+as the `library` user with `-Xmx256m -Xms128m`, exposes port 8080, and contains the
+JAR and JRE without Maven or source files. H2 data remains in memory and resets
+with the application; this container does not provide persistent database storage.
+
+The `.dockerignore` allowlist sends only the Maven file, source tree, and Docker
+build files. Git history, reports, local notes, and host build output are excluded.
+With the Colima profile used for local verification, run `colima start library-lab4`
+and use `docker --context colima-library-lab4` in place of `docker` in the commands
+above. `colima stop library-lab4` stops that local engine after use.
+
+## Application layers
+
+Book and member controllers use services for persistence and business rules, and
+explicit mappers keep their DTO contracts separate from JPA entities. Borrowing
+uses a narrow creation request and a flat `BorrowingDTO`; its mapper requires
+resolved book/member associations when mapping an internal DTO back to an entity.
+Reservation responses retain their flat IDs and existing lifecycle contract.
+All controllers return DTOs, and repositories remain behind the service layer.
 
 ## Persistence structure
 

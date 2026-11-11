@@ -43,7 +43,7 @@ US-01 establishes borrowing records and book availability. US-04 follows because
 | Unchanged Lab 1 baseline | `mvn -B -ntp test` | Exit 0; 2 tests passed, with no failures, errors, or skipped tests. |
 | First borrowing test before implementation | `mvn -B -ntp -Dtest=BorrowingServiceTest test` | Exit 1 during test compilation because `BorrowingService` did not exist. No test methods or assertions executed. |
 
-Both checks ran with Java 17.0.21.0.3 and Maven 3.10.0. The first test was committed in `5ae17d5` before production borrowing behavior was implemented. It checks persisted availability and borrowing dates after flushing and clearing the persistence context.
+Both checks ran with Java 17.0.21.0.3 and Maven 3.10.0. The first test was committed in `cdb4624` before production borrowing behavior was implemented. It checks persisted availability and borrowing dates after flushing and clearing the persistence context.
 
 ## Completion results
 

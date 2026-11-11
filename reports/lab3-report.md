@@ -2,7 +2,7 @@
 
 The reservation feature implements the [completed specification](../docs/AGENTS.md): creating a request for an unavailable book, listing a member's complete reservation history, and cancelling a request while retaining its history. The first implementation conformed to all eight business rules. Final verification passed 90 tests and 47 checks against the packaged application.
 
-The starting point was the completed `lab-2` revision, `bed73de7edc2579b8f526ef5db350d5bae9d30f3`. The specification was completed and frozen before any reservation Java files were created; the implementation plan was then reviewed before coding. The initial conformance audit was recorded before any audit-driven corrections. It found no blocking mismatch and requested no correction.
+The starting point was the completed `lab-2` revision, `3ae31b92c11b03ffd60e36a7caad79debe2ed536`. The specification was completed and frozen before any reservation Java files were created; the implementation plan was then reviewed before coding. The initial conformance audit was recorded before any audit-driven corrections. It found no blocking mismatch and requested no correction.
 
 ## 1. Specification quality audit
 

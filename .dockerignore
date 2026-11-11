@@ -1,0 +1,7 @@
+# Send only the files required to compile and package the application.
+**
+!pom.xml
+!src/
+!src/**
+!Dockerfile
+!.dockerignore

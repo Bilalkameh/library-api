@@ -18,7 +18,7 @@ The detailed acceptance criteria and completion status are in [the sprint backlo
 
 ## Test-first observation
 
-The unchanged Lab 1 application passed its two smoke tests. Adding `BorrowingServiceTest` then caused Maven to fail at `testCompile` because `BorrowingService` did not exist. This was compilation-stage RED: no test methods or assertions executed. Commit `5ae17d5` contains that first test and precedes the production implementation in Git history.
+The unchanged Lab 1 application passed its two smoke tests. Adding `BorrowingServiceTest` then caused Maven to fail at `testCompile` because `BorrowingService` did not exist. This was compilation-stage RED: no test methods or assertions executed. Commit `cdb4624` contains that first test and precedes the production implementation in Git history.
 
 Writing the test first established the public `borrowBook(Long, Long)` contract and the observable outcome: a persisted borrowing and an unavailable book with a due date fourteen days after the borrow date. Flushing and clearing the persistence context made the first acceptance test check database state rather than only a modified Java object. The fine, return, and query tests likewise preceded their respective methods. The implementation order was US-01, US-04, US-02, US-03 because returns depend on fine calculation.
 
