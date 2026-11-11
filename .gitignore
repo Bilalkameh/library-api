@@ -15,3 +15,10 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+
+# Local supporting files; retain required source, tests and lab deliverables
+/.gitattributes
+/AGENTS.md
+/docs/course-reference-map.md
+/docs/experiment-protocol.md
+/reports/evidence/lab2/
