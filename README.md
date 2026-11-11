@@ -1,8 +1,9 @@
 # library-api
 
-Software Engineering Lab 1: a Spring Boot REST API scaffold for books and members.
-Borrowing has a JPA entity and repository; borrowing operations, reservations,
-Docker, and static analysis are reserved for later labs.
+A Spring Boot REST API for books, members, and borrowing transactions.
+Books can be borrowed for 14 days, returned with an overdue fine of EUR 0.50 per
+day, and queried through each member's active borrowings. Reservations, Docker,
+and static analysis are covered in subsequent labs.
 
 ## Requirements and build
 
@@ -20,10 +21,10 @@ mvn -version
 mvn clean verify
 ```
 
-The build compiles with `--release 17` and runs two MockMvc smoke tests:
-GET /books returns 200 with five books; GET /members returns 200 with three members.
-Tests use a separate in-memory database named `libraryapitest` in the test JVM,
-independent of requests sent to the running application.
+The build compiles with `--release 17` and runs the original seed-count smoke tests,
+fine-calculation unit tests, service persistence tests, and MockMvc API tests.
+Separate in-memory databases isolate each integration test suite from the running
+application and from the original five-book, three-member seed checks.
 
 ## Run
 
@@ -73,16 +74,23 @@ Lists are ordered by ID. Book JSON fields are `id`, `isbn`, `title`, `author`,
 | GET | /members | 200 with array |
 | GET | /members/{id} | 200 with member |
 | POST | /members | 201 with member and Location header |
+| POST | /borrowings | 201 with borrowing |
+| PUT | /borrowings/{id}/return | 200 with returned borrowing and fine |
+| GET | /members/{id}/borrowings | 200 with active borrowings ordered by ID |
 
 Missing records return 404. Validation failures or malformed requests return 400;
 validation responses include field errors. Duplicate ISBN/email or foreign-key
-conflicts return 409. Error responses use Spring ProblemDetail JSON.
+conflicts return 409. Unavailable books, repeated returns, and attempts to make a
+book available while it has an active loan also return 409. Error responses use
+Spring ProblemDetail JSON.
 
 ISBN, title, author, genre, name, and email must be nonblank; email must be valid.
 Publication year is a required positive integer. ISBN and member email are unique.
 IDs are database-generated and are not part of request DTOs.
 Omitted `available` and `active` default to true; omitted `membershipDate` defaults
 to today. PUT replaces all editable book fields and requires the same fields as POST.
+For a book with an active borrowing, PUT must explicitly keep `available` false;
+return the borrowing to make that book available again.
 
 After checking the initial counts, try:
 
@@ -111,6 +119,35 @@ $memberBody = @{ name = 'Samir Saleh'; email = 'samir@example.com' } | ConvertTo
 Invoke-RestMethod http://localhost:8080/members -Method Post -ContentType 'application/json' -Body $memberBody
 ```
 
+## Borrowing lifecycle
+
+`POST /borrowings` accepts positive integer `bookId` and `memberId` values:
+
+```json
+{"bookId": 1, "memberId": 1}
+```
+
+Borrowing responses contain `id`, `bookId`, `memberId`, `borrowDate`, `dueDate`,
+`returnDate`, and `fineAmount`. Dates follow the server's local calendar day.
+Early and on-due-date returns have a fine of 0.00. Each overdue day adds 0.50.
+Returned borrowings remain stored but are excluded from the active list.
+
+After a fresh startup, the seeded book and member with ID 1 can be used in this
+example. Use the borrowing ID from the POST response for the return request:
+
+```sh
+curl -i http://localhost:8080/borrowings \
+  -H 'Content-Type: application/json' \
+  -d '{"bookId":1,"memberId":1}'
+curl http://localhost:8080/members/1/borrowings
+curl -i -X PUT http://localhost:8080/borrowings/1/return
+curl http://localhost:8080/books/1
+```
+
+Borrow and return operations update the borrowing and book in one transaction.
+Book-row locks coordinate borrowing, returns, and book edits. A borrowing-row lock
+also prevents concurrent return requests from updating the same record twice.
+
 ## H2 and Swagger UI
 
 Open `http://localhost:8080/h2-console` while the application is running:
@@ -129,7 +166,7 @@ SELECT COUNT(*) FROM borrowings; -- 0
 ```
 
 Swagger UI is at `http://localhost:8080/swagger-ui.html` (redirects to the UI).
-Confirm all eight operations appear and use "Try it out" to exercise the API.
+Confirm all eleven operations appear and use "Try it out" to exercise the API.
 The generated OpenAPI document is at `http://localhost:8080/v3/api-docs`.
 
 ## Persistence structure

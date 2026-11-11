@@ -4,20 +4,24 @@ import com.library.api.dto.BookRequest;
 import com.library.api.entity.Book;
 import com.library.api.exception.ResourceNotFoundException;
 import com.library.api.repository.BookRepository;
+import com.library.api.repository.BorrowingRepository;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/books")
 public class BookController {
     private final BookRepository books;
+    private final BorrowingRepository borrowings;
 
-    public BookController(BookRepository books) {
+    public BookController(BookRepository books, BorrowingRepository borrowings) {
         this.books = books;
+        this.borrowings = borrowings;
     }
 
     @GetMapping
@@ -40,8 +44,14 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
+    @Transactional
     public Book update(@PathVariable Long id, @Valid @RequestBody BookRequest request) {
-        Book book = getById(id);
+        Book book = books.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book", id));
+        if ((request.available() == null || request.available())
+                && borrowings.existsByBookIdAndReturnDateIsNull(id)) {
+            throw new IllegalStateException("A book with an active borrowing cannot be made available.");
+        }
         apply(request, book);
         return books.saveAndFlush(book);
     }

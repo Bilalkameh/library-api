@@ -12,7 +12,7 @@
     <artifactId>library-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>library-api</name>
-    <description>Software Engineering Lab 1 library API scaffold</description>
+    <description>Library management REST API for software engineering labs</description>
     <properties>
         <java.version>17</java.version>
         <maven.compiler.release>17</maven.compiler.release>
