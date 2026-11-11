@@ -3,6 +3,7 @@ package com.library.api.controller;
 import com.library.api.dto.ApiError;
 import com.library.api.dto.ReservationRequest;
 import com.library.api.dto.ReservationResponse;
+import com.library.api.mapper.ReservationMapper;
 import com.library.api.service.ReservationService;
 import org.springframework.http.HttpStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,9 +24,11 @@ import org.springframework.web.bind.annotation.*;
         content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ApiError.class)))
 public class ReservationController {
     private final ReservationService reservationService;
+    private final ReservationMapper mapper;
 
-    public ReservationController(ReservationService reservationService) {
+    public ReservationController(ReservationService reservationService, ReservationMapper mapper) {
         this.reservationService = reservationService;
+        this.mapper = mapper;
     }
 
     @PostMapping("/reservations")
@@ -40,7 +43,7 @@ public class ReservationController {
     @ApiResponse(responseCode = "415", description = "Request media type is not supported",
             content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ApiError.class)))
     public ResponseEntity<ReservationResponse> reserve(@Valid @RequestBody ReservationRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ReservationResponse.from(
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDTO(
                 reservationService.reserveBook(request.bookId(), request.memberId())));
     }
 
@@ -53,7 +56,7 @@ public class ReservationController {
             content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ApiError.class)))
     public List<ReservationResponse> memberHistory(@PathVariable Long memberId) {
         return reservationService.getReservationsForMember(memberId).stream()
-                .map(ReservationResponse::from).toList();
+                .map(mapper::toDTO).toList();
     }
 
     @PutMapping("/reservations/{id}/cancel")
@@ -66,6 +69,6 @@ public class ReservationController {
     @ApiResponse(responseCode = "409", description = "Reservation has already been cancelled",
             content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ApiError.class)))
     public ReservationResponse cancel(@PathVariable Long id) {
-        return ReservationResponse.from(reservationService.cancelReservation(id));
+        return mapper.toDTO(reservationService.cancelReservation(id));
     }
 }

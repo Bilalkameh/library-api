@@ -1,6 +1,5 @@
 package com.library.api.dto;
 
-import com.library.api.entity.Reservation;
 import com.library.api.entity.ReservationStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
@@ -16,10 +15,4 @@ public record ReservationResponse(
         ReservationStatus status,
         @Schema(description = "First cancellation date; null while active", example = "2026-11-12", nullable = true,
                 accessMode = Schema.AccessMode.READ_ONLY) LocalDate cancelledDate) {
-
-    public static ReservationResponse from(Reservation reservation) {
-        return new ReservationResponse(reservation.getId(), reservation.getBook().getId(),
-                reservation.getMember().getId(), reservation.getReservationDate(),
-                reservation.getStatus(), reservation.getCancelledDate());
-    }
 }

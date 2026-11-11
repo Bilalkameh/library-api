@@ -17,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BorrowingService {
+    private static final BigDecimal DAILY_FINE_RATE = new BigDecimal("0.50");
+    private static final int DEFAULT_LOAN_DAYS = 14;
+
     private final BookRepository books;
     private final MemberRepository members;
     private final BorrowingRepository borrowings;
@@ -45,7 +48,7 @@ public class BorrowingService {
         borrowing.setBook(book);
         borrowing.setMember(member);
         borrowing.setBorrowDate(today);
-        borrowing.setDueDate(today.plusDays(14));
+        borrowing.setDueDate(today.plusDays(DEFAULT_LOAN_DAYS));
         book.setAvailable(false);
         return borrowings.save(borrowing);
     }
@@ -61,10 +64,7 @@ public class BorrowingService {
         Long bookId = borrowing.getBook().getId();
         Book book = books.findByIdForUpdate(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Book", bookId));
-        LocalDate today = LocalDate.now(clock);
-        borrowing.setReturnDate(today);
-        borrowing.setFineAmount(calculateFine(borrowing.getDueDate(), today));
-        book.setAvailable(true);
+        applyReturn(borrowing, book);
         return borrowings.save(borrowing);
     }
 
@@ -78,6 +78,13 @@ public class BorrowingService {
 
     public BigDecimal calculateFine(LocalDate dueDate, LocalDate returnDate) {
         long overdueDays = Math.max(0, ChronoUnit.DAYS.between(dueDate, returnDate));
-        return new BigDecimal("0.50").multiply(BigDecimal.valueOf(overdueDays));
+        return DAILY_FINE_RATE.multiply(BigDecimal.valueOf(overdueDays));
+    }
+
+    private void applyReturn(Borrowing borrowing, Book book) {
+        LocalDate today = LocalDate.now(clock);
+        borrowing.setReturnDate(today);
+        borrowing.setFineAmount(calculateFine(borrowing.getDueDate(), today));
+        book.setAvailable(true);
     }
 }
