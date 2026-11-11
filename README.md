@@ -1,9 +1,10 @@
 # library-api
 
-A Spring Boot REST API for books, members, and borrowing transactions.
+A Spring Boot REST API for books, members, borrowing transactions, and reservations.
 Books can be borrowed for 14 days, returned with an overdue fine of EUR 0.50 per
-day, and queried through each member's active borrowings. Reservations, Docker,
-and static analysis are covered in subsequent labs.
+day, and queried through each member's active borrowings. Reservations record
+interest in unavailable books and retain cancellation history. Docker and static
+analysis are covered in subsequent labs.
 
 ## Requirements and build
 
@@ -22,7 +23,8 @@ mvn clean verify
 ```
 
 The build compiles with `--release 17` and runs the original seed-count smoke tests,
-fine-calculation unit tests, service persistence tests, and MockMvc API tests.
+fine-calculation unit tests, service persistence tests, MockMvc API tests, and
+transaction-contention tests for borrowing and reservations.
 Separate in-memory databases isolate each integration test suite from the running
 application and from the original five-book, three-member seed checks.
 
@@ -77,16 +79,20 @@ Lists are ordered by ID. Book JSON fields are `id`, `isbn`, `title`, `author`,
 | POST | /borrowings | 201 with borrowing |
 | PUT | /borrowings/{id}/return | 200 with returned borrowing and fine |
 | GET | /members/{id}/borrowings | 200 with active borrowings ordered by ID |
+| POST | /reservations | 201 with active reservation |
+| GET | /members/{memberId}/reservations | 200 with all reservation history ordered by ID |
+| PUT | /reservations/{id}/cancel | 200 with retained cancelled reservation |
 
 Missing records return 404. Validation failures or malformed requests return 400;
 validation responses include field errors. Duplicate ISBN/email or foreign-key
-conflicts return 409. Unavailable books, repeated returns, and attempts to make a
+conflicts return 409. Borrowing an unavailable book, repeated returns, and attempts to make a
 book available while it has an active loan also return 409. Error responses use
 Spring ProblemDetail JSON.
 
 ISBN, title, author, genre, name, and email must be nonblank; email must be valid.
 Publication year is a required positive integer. ISBN and member email are unique.
-IDs are database-generated and are not part of request DTOs.
+Each new resource's own `id` is database-generated. Borrowing and reservation
+requests supply the existing `bookId` and `memberId` they refer to.
 Omitted `available` and `active` default to true; omitted `membershipDate` defaults
 to today. PUT replaces all editable book fields and requires the same fields as POST.
 For a book with an active borrowing, PUT must explicitly keep `available` false;
@@ -148,6 +154,31 @@ Borrow and return operations update the borrowing and book in one transaction.
 Book-row locks coordinate borrowing, returns, and book edits. A borrowing-row lock
 also prevents concurrent return requests from updating the same record twice.
 
+## Reservations
+
+The [reservation specification](docs/AGENTS.md) defines the business rules and
+acceptance criteria. Create a reservation with the same positive `bookId` and
+`memberId` request fields used for borrowing. The book must be unavailable;
+otherwise the API returns 409 with `detail` equal to
+`Book is available for direct borrowing.`
+
+Any existing member can reserve an unavailable book, including an inactive member
+or the current borrower. Each book/member pair can have only one active reservation,
+while different members can reserve the same book. Duplicate active requests return
+409. Unknown creation fields are ignored; the reservation ID, status, and dates are
+set by the server.
+
+Responses contain `id`, `bookId`, `memberId`, `reservationDate`, `status`, and
+`cancelledDate`. A new reservation is `ACTIVE` with a null cancellation date.
+Cancelling sets `CANCELLED` and the current local date while retaining the record.
+Repeated cancellation returns 409. A later request for the same pair gets a new ID
+if the book is still unavailable, so multiple cancelled historical records can exist.
+
+The member reservation endpoint returns both statuses in ascending ID order;
+a member with no history receives `[]`. Returning a book leaves its reservations
+active until explicitly cancelled. Reservations introduce no automatic allocation,
+notification, expiry, queue priority, or restriction on the existing borrowing API.
+
 ## H2 and Swagger UI
 
 Open `http://localhost:8080/h2-console` while the application is running:
@@ -163,10 +194,11 @@ After a fresh startup, run:
 SELECT COUNT(*) FROM books;      -- 5
 SELECT COUNT(*) FROM members;    -- 3
 SELECT COUNT(*) FROM borrowings; -- 0
+SELECT COUNT(*) FROM reservations; -- 0
 ```
 
 Swagger UI is at `http://localhost:8080/swagger-ui.html` (redirects to the UI).
-Confirm all eleven operations appear and use "Try it out" to exercise the API.
+Confirm all fourteen operations appear and use "Try it out" to exercise the API.
 The generated OpenAPI document is at `http://localhost:8080/v3/api-docs`.
 
 ## Persistence structure
@@ -174,4 +206,7 @@ The generated OpenAPI document is at `http://localhost:8080/v3/api-docs`.
 Entities use Long identity IDs and Jakarta Persistence. Borrowing references Book
 and Member through required lazy ManyToOne relationships, without cascading deletes.
 Dates use LocalDate; fineAmount uses BigDecimal stored as DECIMAL(10,2), initially
-0.00. returnDate may be null. Tables are books, members, and borrowings.
+0.00. returnDate may be null. Reservation also uses required lazy Book/Member
+relationships without cascades, stores its status as a string, and retains its
+original reservation date when cancelled. Tables are books, members, borrowings,
+and reservations.
